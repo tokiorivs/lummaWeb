@@ -116,11 +116,11 @@ a { color: inherit; }
 .prod:hover { transform: translateY(2px); box-shadow: 0 2px 0 var(--azul); }
 .prod .foto { aspect-ratio: 1 / .85; display: flex; align-items: center; justify-content: center; border-bottom: 3px solid var(--azul); }
 .prod .foto svg { width: 70%; height: 90%; }
-.prod .info { padding: 8px 10px 10px; }
+.prod .info { display: block; padding: 7px 16px 16px; }
 .prod .nombre { font-family: var(--font-titulo); font-weight: 800; font-size: 1rem; line-height: 1.15; display: block; min-height: 2.3em; }
-.prod .precio-fila { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 4px; }
-.prod .precio { font-weight: 800; }
-.prod .accion { font-size: .8rem; font-weight: 800; background: var(--naranja); border: 2px solid var(--azul); border-radius: 999px; padding: 1px 10px; }
+.prod .precio-fila { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin-top: 0; }
+.prod .precio { font-weight: 800; font-size: 1.1rem; }
+.prod .accion { display: block; text-align: center; font-size: .85rem; font-weight: 800; background: var(--naranja); border: 2px solid var(--azul); border-radius: 999px; padding: 5px 16px; white-space: nowrap; }
 .insignia { position: absolute; top: 8px; right: 8px; background: var(--rosa); color: #fff; border: 2px solid var(--azul); border-radius: 999px; min-width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .85rem; padding: 0 6px; }
 
 .barra { position: sticky; bottom: 10px; margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--azul); color: var(--blanco); padding: 10px 14px; border-radius: 18px; }
@@ -176,3 +176,14 @@ a { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) { .btn, .prod, .tarjeta.cat { transition: none; } }
 .total-arriba { background: var(--fondo-claro); border: 2px solid var(--azul); border-radius: 14px; padding: 8px 14px; }
+.prod .precio { white-space: nowrap; }
+@media (max-width: 520px) {
+  .prod .info { padding: 5px 12px 14px; }
+  .prod .precio { font-size: 1rem; }
+  .prod .accion { font-size: .8rem; padding: 5px 10px; }
+}
+.prod { display: flex; flex-direction: column; }
+.prod .info { flex: 1; display: flex; flex-direction: column; }
+.prod .precio-fila { margin-top: auto; padding-top: 0; }
+.prod .precio { text-align: center; }
+.prod .nombre { display: flex; align-items: center; justify-content: center; text-align: center; }

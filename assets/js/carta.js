@@ -79,7 +79,7 @@
       ${q ? `<span class="insignia">${q}</span>` : ''}
       <span class="foto" style="background:${ART.tint(i.c[0], 0.8)}">${ART.svg(i.arte, i.c[0], i.c[1], 'p' + n)}</span>
       <span class="info"><span class="nombre">${i.nombre}</span>
-      <span class="precio-fila"><span class="precio">${money(i.precio)}</span><span class="accion">${simple ? '+ Agregar' : 'Elegir'}</span></span></span>
+      <span class="precio-fila"><span class="precio">${money(i.precio)}</span><span class="accion">${simple ? 'Agregar' : 'Elegir'}</span></span></span>
     </button>`;
   }
 
