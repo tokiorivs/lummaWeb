@@ -95,7 +95,7 @@
     const enPedido = (id) => S.cart.reduce((a, l) => { const i = find(l.id); return a + (i && i.cat === id ? l.q : 0); }, 0);
     return `<h2 class="titulo-cats">Toca una categoría</h2><div class="rejilla-cats">${MENU.map((c, n) => {
       const q = enPedido(c.id);
-      return `<button class="tarjeta cat" data-a="cat" data-v="${c.id}">${q ? `<span class="insignia">${q}</span>` : ''}<div class="ilustra">${ART.svg(c.icono, c.c[0], c.c[1], 'k' + n)}</div><strong>${c.nombre}</strong><span>${c.nota}</span></button>`;
+      return `<button class="tarjeta cat" data-a="cat" data-v="${c.id}">${q ? `<span class="insignia">${q}</span>` : ''}<div class="ilustra">${ART.svg(c.icono, c.c[0], c.c[1], 'k' + n)}</div><strong>${c.nombre}</strong><span class="nota-cat solo-lectores">${c.nota}</span></button>`;
     }).join('')}</div>${barraPedido()}`;
   }
 
