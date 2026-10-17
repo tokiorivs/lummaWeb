@@ -1,0 +1,177 @@
+/* Carta interactiva de Lumma. Todo ocurre en el celular del cliente: no se envía ningún pedido. */
+(function () {
+  const MENU = window.LUMMA_MENU, CFG = window.LUMMA_CONFIG, ART = window.LummaArt;
+  const $app = document.getElementById('app');
+  const KEY = 'lumma_carta_v1';
+
+  const money = (n) => 'S/ ' + n.toFixed(2);
+  function load() { try { const v = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S.cart)); } catch (e) { /* sin almacenamiento */ } }
+
+  const S = { view: 'menu', cat: MENU[0].id, cart: load(), cur: null, upShown: false, big: false };
+  const hash = location.hash.replace('#', '');
+  if (MENU.some((c) => c.id === hash)) S.cat = hash;
+
+  const items = MENU.flatMap((c) => c.items.map((i) => ({ ...i, cat: c.id })));
+  const find = (id) => items.find((i) => i.id === id);
+  const nom = (i) => i.completo || i.nombre;
+  const total = () => S.cart.reduce((a, l) => a + l.u * l.q, 0);
+  const count = () => S.cart.reduce((a, l) => a + l.q, 0);
+  const qtyOf = (id) => S.cart.filter((l) => l.id === id).reduce((a, l) => a + l.q, 0);
+
+  function addLine(line) {
+    const ex = S.cart.find((l) => l.key === line.key);
+    if (ex) ex.q += line.q; else S.cart.push(line);
+    save();
+  }
+
+  function unit() {
+    const c = S.cur, i = c.item;
+    let p = i.variantes ? i.variantes[c.vari].p : i.precio;
+    if (i.tipo === 'bebida' && c.size) p += CFG.extra_grande;
+    c.extras.forEach((n) => { p += CFG.extras_ramen.find((e) => e.n === n).p; });
+    return p;
+  }
+  function detail() {
+    const c = S.cur, i = c.item, d = [];
+    if (i.variantes) d.push(i.variantes[c.vari].n);
+    if (i.sabores) d.push(i.sabores[c.sab]);
+    if (i.tipo === 'bebida') { d.push(c.size ? 'Grande' : 'Regular'); d.push('Topping: ' + CFG.topping_gratis[c.top].toLowerCase()); }
+    if (i.tipo === 'ramen') { d.push(CFG.picantes[c.pic]); c.extras.forEach((n) => d.push('+ ' + n.toLowerCase())); }
+    if (i.tipo === 'combo') d.unshift('Fruit Tea de ' + i.sabores[c.sab].toLowerCase());
+    return d;
+  }
+
+  function go(view) { S.view = view; render(); window.scrollTo({ top: Math.max($app.offsetTop - 70, 0), behavior: 'auto' }); }
+
+  function openItem(id) {
+    const i = find(id);
+    if (i.tipo === 'simple' && !i.variantes && !i.sabores) { addLine({ key: i.id, id: i.id, nombre: nom(i), det: [], u: i.precio, q: 1 }); render(); return; }
+    S.cur = { item: i, q: 1, size: 0, top: 0, pic: 1, extras: [], vari: 0, sab: 0 };
+    go('sheet');
+  }
+  function addCur() {
+    const c = S.cur, d = detail();
+    addLine({ key: c.item.id + '|' + d.join('|'), id: c.item.id, nombre: nom(c.item), det: d, u: unit(), q: c.q });
+    go('menu');
+  }
+  function addSuggested(id) {
+    const i = find(id), d = [];
+    let u = i.precio;
+    if (i.variantes) { d.push(i.variantes[0].n); u = i.variantes[0].p; }
+    if (i.sabores) d.push(i.sabores[0]);
+    addLine({ key: i.id + '|' + d.join('|'), id: i.id, nombre: nom(i), det: d, u, q: 1 });
+    go('cart');
+  }
+  function checkout() {
+    const hasMain = S.cart.some((l) => { const i = find(l.id); return i && (i.tipo === 'bebida' || i.tipo === 'ramen'); });
+    const hasSnack = S.cart.some((l) => { const i = find(l.id); return i && i.cat === 'dim-sum'; });
+    if (!S.upShown && hasMain && !hasSnack) { S.upShown = true; go('up'); } else go('cart');
+  }
+
+  /* ---------- vistas ---------- */
+  const pasos = ['Elegir', 'Personalizar', 'Sugerencia', 'En caja'];
+  const stepIndex = { menu: 0, sheet: 1, up: 2, cart: 3 };
+
+  function card(i, n) {
+    const q = qtyOf(i.id), simple = i.tipo === 'simple' && !i.variantes && !i.sabores;
+    return `<button class="prod" data-a="item" data-v="${i.id}">
+      ${q ? `<span class="insignia">${q}</span>` : ''}
+      <span class="foto" style="background:${ART.tint(i.c[0], 0.8)}">${ART.svg(i.arte, i.c[0], i.c[1], 'p' + n)}</span>
+      <span class="info"><span class="nombre">${i.nombre}</span>
+      <span class="precio-fila"><span class="precio">${money(i.precio)}</span><span class="accion">${simple ? '+ Agregar' : 'Elegir'}</span></span></span>
+    </button>`;
+  }
+
+  function viewMenu() {
+    const cat = MENU.find((c) => c.id === S.cat);
+    const rail = MENU.map((c) => `<button class="chip${c.id === S.cat ? ' on' : ''}" data-a="cat" data-v="${c.id}">${c.nombre}<span class="nota">${c.nota}</span></button>`).join('');
+    let h = `<div class="layout"><div class="rail" role="tablist" aria-label="Categorías">${rail}</div>
+      <div><div class="rejilla-prod">${cat.items.map((i, n) => card(i, n)).join('')}</div></div></div>`;
+    if (S.cart.length) h += `<div class="barra"><div><div class="suave">${count()} producto${count() > 1 ? 's' : ''} en tu pedido</div><div class="total">${money(total())}</div></div><button class="btn" data-a="checkout">Ver pedido</button></div>`;
+    return h;
+  }
+
+  function group(etq, inner) { return `<div class="grupo"><span class="etq">${etq}</span>${inner}</div>`; }
+  function opts(list, sel, action, fmt) {
+    return `<div class="opciones">${list.map((x, n) => `<button class="opcion" aria-pressed="${sel(n)}" data-a="${action}" data-v="${n}">${fmt ? fmt(x, n) : x}</button>`).join('')}</div>`;
+  }
+
+  function viewSheet() {
+    const c = S.cur, i = c.item;
+    let h = `<div class="fila"><button class="volver" data-a="back">← Volver</button><strong>${nom(i)}</strong><span></span></div>
+      <div class="detalle-foto" style="background:${ART.tint(i.c[0], 0.8)}">${ART.svg(i.arte, i.c[0], i.c[1], 'd')}</div>`;
+    if (i.desc) h += `<p class="suave" style="margin:0">${i.desc}</p>`;
+    if (i.variantes) h += group('Elige una opción', opts(i.variantes, (n) => c.vari === n, 'vari', (v) => v.n + (v.p !== i.variantes[0].p ? ' · ' + money(v.p) : '')));
+    if (i.sabores) h += group(i.tipo === 'combo' ? 'Sabor del Fruit Tea' : 'Sabor', opts(i.sabores, (n) => c.sab === n, 'sab'));
+    if (i.tipo === 'bebida') {
+      h += group('Tamaño', opts(['Regular', 'Grande + ' + money(CFG.extra_grande)], (n) => c.size === n, 'size'));
+      h += group('Topping gratis', opts(CFG.topping_gratis, (n) => c.top === n, 'top'));
+    }
+    if (i.tipo === 'ramen') {
+      h += group('Nivel de picante', opts(CFG.picantes, (n) => c.pic === n, 'pic'));
+      h += group('Toppings extra', opts(CFG.extras_ramen, (n) => c.extras.includes(CFG.extras_ramen[n].n), 'extra', (e) => e.n + ' + ' + money(e.p)));
+    }
+    h += `<div class="cantidad"><span class="suave">Cantidad</span><button data-a="menos" aria-label="Menos">−</button><span>${c.q}</span><button data-a="mas" aria-label="Más">+</button></div>`;
+    h += `<div class="barra"><div><div class="suave">Total</div><div class="total">${money(unit() * c.q)}</div></div><button class="btn" data-a="addcur">Agregar al pedido</button></div>`;
+    return h;
+  }
+
+  function viewUp() {
+    const list = CFG.sugerencias.map(find).filter(Boolean);
+    return `<div style="text-align:center"><h2 style="margin-bottom:.2rem">¿Algo para acompañar?</h2><p class="suave">Suma un snack a tu pedido.</p></div>
+      <div class="rejilla-prod" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${list.map((i) => `<button class="prod" data-a="sug" data-v="${i.id}">
+        <span class="foto" style="background:${ART.tint(i.c[0], 0.8)}">${ART.svg(i.arte, i.c[0], i.c[1], 's' + i.id)}</span>
+        <span class="info"><span class="nombre">${i.nombre}</span><span class="precio-fila"><span class="precio">${money(i.precio)}</span><span class="accion">+ Agregar</span></span></span></button>`).join('')}</div>
+      <div class="barra" style="background:none;padding:0"><button class="btn blanco bloque" data-a="nogracias">No, gracias</button></div>`;
+  }
+
+  function viewCart() {
+    if (!S.cart.length) return `<div class="vacio"><h2>Tu pedido está vacío</h2><p>Elige algo de la carta para ver tu total.</p><button class="btn" data-a="back">Ir a la carta</button></div>`;
+    let h = `<div class="${S.big ? 'grande-modo' : ''}" style="display:flex;flex-direction:column;gap:12px">
+      <div class="fila"><button class="volver" data-a="back">← Volver</button><strong>Muestra esto en caja</strong><span></span></div>
+      <div class="total-fila total-arriba"><span>Total a pagar</span><span class="grande">${money(total())}</span></div>`;
+    S.cart.forEach((l, n) => {
+      h += `<div class="linea"><div><div class="nm">${l.q} × ${l.nombre}</div>${l.det.length ? `<div class="suave">${l.det.join(' · ')}</div>` : ''}<button class="quitar" data-a="rm" data-v="${n}">Quitar</button></div><div class="precio-linea">${money(l.u * l.q)}</div></div>`;
+    });
+    h += `<div class="nota-caja">Este resumen no se envía a nadie. Díctalo o muéstralo en caja, donde se confirma y se cobra tu pedido.</div>
+      <div class="acciones-col"><button class="btn rosa bloque" data-a="big">${S.big ? 'Letra normal' : 'Letra grande para mostrar'}</button>
+      <div class="acciones-fila"><button class="btn blanco" data-a="back">Seguir agregando</button><button class="btn blanco" data-a="reset">Vaciar pedido</button></div></div></div>`;
+    return h;
+  }
+
+  function render() {
+    const views = { menu: viewMenu, sheet: viewSheet, up: viewUp, cart: viewCart };
+    const ix = stepIndex[S.view];
+    $app.innerHTML = `<div class="pasos" aria-label="Pasos">${pasos.map((p, n) => `<span class="${n === ix ? 'on' : ''}"${n === ix ? ' aria-current="step"' : ''}>${p}</span>`).join('')}</div>${views[S.view]()}`;
+  }
+
+  /* ---------- eventos ---------- */
+  $app.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-a]');
+    if (!t) return;
+    const a = t.dataset.a, v = t.dataset.v, c = S.cur;
+    switch (a) {
+      case 'cat': S.cat = v; render(); break;
+      case 'item': openItem(v); break;
+      case 'back': go('menu'); break;
+      case 'size': c.size = +v; render(); break;
+      case 'top': c.top = +v; render(); break;
+      case 'pic': c.pic = +v; render(); break;
+      case 'vari': c.vari = +v; render(); break;
+      case 'sab': c.sab = +v; render(); break;
+      case 'extra': { const n = CFG.extras_ramen[+v].n; const k = c.extras.indexOf(n); if (k >= 0) c.extras.splice(k, 1); else c.extras.push(n); render(); break; }
+      case 'mas': c.q += 1; render(); break;
+      case 'menos': c.q = Math.max(1, c.q - 1); render(); break;
+      case 'addcur': addCur(); break;
+      case 'checkout': checkout(); break;
+      case 'sug': addSuggested(v); break;
+      case 'nogracias': go('cart'); break;
+      case 'rm': S.cart.splice(+v, 1); save(); if (!S.cart.length) S.view = 'menu'; render(); break;
+      case 'big': S.big = !S.big; render(); break;
+      case 'reset': S.cart = []; save(); S.upShown = false; S.big = false; go('menu'); break;
+    }
+  });
+
+  render();
+})();

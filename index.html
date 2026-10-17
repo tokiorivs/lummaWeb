@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumma Bubble Tea | Bubble tea y comida coreana</title>
+  <meta name="description" content="Bubble tea, ramen, dim sum y street food coreano. Crea tu bebida en 3 pasos con topping gratis y arma tu pedido en la carta digital.">
+  <meta name="theme-color" content="#F78F35">
+  <link rel="icon" href="assets/images/lumma-logo.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body data-page="inicio">
+  <header class="encabezado" id="encabezado"></header>
+
+  <main>
+    <section class="hero">
+      <div class="contenedor">
+        <img class="logo-grande" src="assets/images/lumma-logo.webp" alt="Lumma Bubble Tea" width="810" height="363">
+        <h1 class="solo-lectores">Lumma Bubble Tea</h1>
+        <p>Bubble tea, ramen, dim sum y street food coreano. Crea tu bebida en 3 pasos, con topping gratis incluido.</p>
+        <div class="acciones">
+          <a class="btn" href="carta.html">Armar mi pedido</a>
+          <a class="btn blanco" href="#delivery">Pedir por delivery</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion" id="que-encuentras">
+      <div class="contenedor">
+        <h2>Lo que encuentras</h2>
+        <p class="sub">Toca una categoría para ir directo a la carta.</p>
+        <div class="rejilla" id="categorias-inicio"></div>
+      </div>
+    </section>
+
+    <section class="seccion" id="como-pedir">
+      <div class="contenedor">
+        <h2>Pide en 3 pasos</h2>
+        <p class="sub">Arma tu pedido desde el celular y muéstralo en caja.</p>
+        <div class="rejilla">
+          <article class="tarjeta"><span class="num">1</span><h3>Elige</h3><p class="dato">Recorre la carta, con bebidas, ramen, dim sum y combos.</p></article>
+          <article class="tarjeta"><span class="num">2</span><h3>Personaliza</h3><p class="dato">Escoge el tamaño, tu topping gratis y tu nivel de picante.</p></article>
+          <article class="tarjeta"><span class="num">3</span><h3>Muestra en caja</h3><p class="dato">Verás tu total y el detalle. Díctalo o muéstralo al cajero.</p></article>
+        </div>
+        <div class="fila-botones" style="margin-top:1.4rem"><a class="btn" href="carta.html">Ir a la carta</a></div>
+      </div>
+    </section>
+
+    <section class="seccion" id="locales-seccion">
+      <div class="contenedor">
+        <h2>Nuestros locales</h2>
+        <p class="sub">Encuentra el más cercano.</p>
+        <div class="rejilla" id="locales"></div>
+      </div>
+    </section>
+
+    <section class="seccion" id="delivery">
+      <div class="contenedor">
+        <h2>Pide por delivery</h2>
+        <p class="sub">También estamos en estas plataformas.</p>
+        <div class="fila-botones">
+          <a class="btn rosa" data-enlace="rappi" href="#">Rappi</a>
+          <a class="btn rosa" data-enlace="pedidosya" href="#">PedidosYa</a>
+          <a class="btn azul" data-enlace="whatsapp" href="#">WhatsApp</a>
+        </div>
+        <div class="fila-botones" style="margin-top:1rem">
+          <a class="btn blanco chico" data-enlace="instagram" href="#">Instagram</a>
+          <a class="btn blanco chico" data-enlace="facebook" href="#">Facebook</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie" id="pie"></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/art.js"></script>
+  <script src="assets/js/menu-data.js"></script>
+  <script src="assets/js/site.js"></script>
+</body>
+</html>
