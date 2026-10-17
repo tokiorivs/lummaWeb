@@ -8,9 +8,12 @@
   function load() { try { const v = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S.cart)); } catch (e) { /* sin almacenamiento */ } }
 
+  const esGrande = () => window.matchMedia('(min-width: 900px)').matches;
   const S = { view: 'menu', cat: MENU[0].id, cart: load(), cur: null, upShown: false, big: false };
   const hash = location.hash.replace('#', '');
-  if (MENU.some((c) => c.id === hash)) S.cat = hash;
+  const enlaceDirecto = MENU.some((c) => c.id === hash);
+  if (enlaceDirecto) S.cat = hash;
+  if (!enlaceDirecto && !esGrande()) S.view = 'cats';
 
   const items = MENU.flatMap((c) => c.items.map((i) => ({ ...i, cat: c.id })));
   const find = (id) => items.find((i) => i.id === id);
@@ -71,7 +74,7 @@
 
   /* ---------- vistas ---------- */
   const pasos = ['Elegir', 'Personalizar', 'Sugerencia', 'En caja'];
-  const stepIndex = { menu: 0, sheet: 1, up: 2, cart: 3 };
+  const stepIndex = { cats: 0, menu: 0, sheet: 1, up: 2, cart: 3 };
 
   function card(i, n) {
     const q = qtyOf(i.id), simple = i.tipo === 'simple' && !i.variantes && !i.sabores;
@@ -83,13 +86,26 @@
     </button>`;
   }
 
+  function barraPedido() {
+    if (!S.cart.length) return '';
+    return `<div class="barra"><div><div class="suave">${count()} producto${count() > 1 ? 's' : ''} en tu pedido</div><div class="total">${money(total())}</div></div><button class="btn" data-a="checkout">Ver pedido</button></div>`;
+  }
+
+  function viewCats() {
+    const enPedido = (id) => S.cart.reduce((a, l) => { const i = find(l.id); return a + (i && i.cat === id ? l.q : 0); }, 0);
+    return `<h2 class="titulo-cats">Toca una categoría</h2><div class="rejilla-cats">${MENU.map((c, n) => {
+      const q = enPedido(c.id);
+      return `<button class="tarjeta cat" data-a="cat" data-v="${c.id}">${q ? `<span class="insignia">${q}</span>` : ''}<div class="ilustra">${ART.svg(c.icono, c.c[0], c.c[1], 'k' + n)}</div><strong>${c.nombre}</strong><span>${c.nota}</span></button>`;
+    }).join('')}</div>${barraPedido()}`;
+  }
+
   function viewMenu() {
     const cat = MENU.find((c) => c.id === S.cat);
     const rail = MENU.map((c) => `<button class="chip${c.id === S.cat ? ' on' : ''}" data-a="cat" data-v="${c.id}">${c.nombre}<span class="nota">${c.nota}</span></button>`).join('');
-    let h = `<div class="layout"><div class="rail-wrap"><p class="pista-cat">Toca una categoría</p><div class="rail" role="tablist" aria-label="Categorías">${rail}</div></div>
+    let h = `<div class="fila barra-volver solo-movil"><button class="volver" data-a="cats">← Categorías</button><strong>${cat.nombre}</strong><span></span></div>
+      <div class="layout"><div class="rail-wrap"><p class="pista-cat">Toca una categoría</p><div class="rail" role="tablist" aria-label="Categorías">${rail}</div></div>
       <div><div class="rejilla-prod">${cat.items.map((i, n) => card(i, n)).join('')}</div></div></div>`;
-    if (S.cart.length) h += `<div class="barra"><div><div class="suave">${count()} producto${count() > 1 ? 's' : ''} en tu pedido</div><div class="total">${money(total())}</div></div><button class="btn" data-a="checkout">Ver pedido</button></div>`;
-    return h;
+    return h + barraPedido();
   }
 
   function group(etq, inner) { return `<div class="grupo"><span class="etq">${etq}</span>${inner}</div>`; }
@@ -127,7 +143,7 @@
   }
 
   function viewCart() {
-    if (!S.cart.length) return `<div class="vacio"><h2>Tu pedido está vacío</h2><p>Elige algo de la carta para ver tu total.</p><button class="btn" data-a="back">Ir a la carta</button></div>`;
+    if (!S.cart.length) return `<div class="vacio"><h2>Tu pedido está vacío</h2><p>Elige algo de la carta para ver tu total.</p><button class="btn" data-a="seguir">Ir a la carta</button></div>`;
     let h = `<div class="${S.big ? 'grande-modo' : ''}" style="display:flex;flex-direction:column;gap:12px">
       <div class="fila barra-volver"><button class="volver" data-a="back">← Volver</button><strong>Muestra esto en caja</strong><span></span></div>
       <div class="total-fila total-arriba"><span>Total a pagar</span><span class="grande">${money(total())}</span></div>`;
@@ -136,7 +152,7 @@
     });
     h += `<div class="nota-caja">Este resumen no se envía a nadie. Díctalo o muéstralo en caja, donde se confirma y se cobra tu pedido.</div>
       <div class="acciones-col"><button class="btn rosa bloque" data-a="big">${S.big ? 'Letra normal' : 'Letra grande para mostrar'}</button>
-      <div class="acciones-fila"><button class="btn blanco" data-a="back">Seguir agregando</button><button class="btn blanco" data-a="reset">Vaciar pedido</button></div></div></div>`;
+      <div class="acciones-fila"><button class="btn blanco" data-a="seguir">Seguir agregando</button><button class="btn blanco" data-a="reset">Vaciar pedido</button></div></div></div>`;
     return h;
   }
 
@@ -187,7 +203,8 @@
   }
 
   function render() {
-    const views = { menu: viewMenu, sheet: viewSheet, up: viewUp, cart: viewCart };
+    if (S.view === 'cats' && esGrande()) S.view = 'menu';
+    const views = { cats: viewCats, menu: viewMenu, sheet: viewSheet, up: viewUp, cart: viewCart };
     const ix = stepIndex[S.view];
     const previa = $app.querySelector('.rail');
     const izq = previa ? previa.scrollLeft : 0;
@@ -201,7 +218,9 @@
     if (!t) return;
     const a = t.dataset.a, v = t.dataset.v, c = S.cur;
     switch (a) {
-      case 'cat': S.cat = v; render(); break;
+      case 'cat': S.cat = v; if (S.view === 'cats') go('menu'); else render(); break;
+      case 'cats': go('cats'); break;
+      case 'seguir': go(esGrande() ? 'menu' : 'cats'); break;
       case 'item': openItem(v); break;
       case 'back': go('menu'); break;
       case 'size': c.size = +v; render(); break;
@@ -224,5 +243,6 @@
     }
   });
 
+  window.matchMedia('(min-width: 900px)').addEventListener('change', () => { if (esGrande() && S.view === 'cats') S.view = 'menu'; render(); });
   render();
 })();

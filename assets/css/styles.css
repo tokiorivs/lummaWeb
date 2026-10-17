@@ -208,3 +208,11 @@ a { color: inherit; }
 .grande-modo .quitar { font-size: 1rem; }
 
 .barra-volver { position: sticky; top: var(--enc, 64px); z-index: 15; background: var(--blanco); padding: 8px 0; border-bottom: 2px solid var(--fondo-borde); }
+
+/* Categorías como tarjetas (celular) */
+.titulo-cats { text-align: center; font-size: 1.3rem; margin: 4px 0 2px; }
+.rejilla-cats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+button.tarjeta.cat { font: inherit; color: inherit; cursor: pointer; width: 100%; text-align: center; }
+.rejilla-cats .tarjeta.cat { padding: .9rem .6rem 1rem; }
+@media (max-width: 899px) { .pista-cat { display: none; } }
+@media (min-width: 900px) { .solo-movil { display: none; } }
