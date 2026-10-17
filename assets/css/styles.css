@@ -226,3 +226,38 @@ button.tarjeta.cat { font: inherit; color: inherit; cursor: pointer; width: 100%
   .rejilla-cats .tarjeta.cat strong { display: flex; align-items: center; justify-content: center; min-height: 2.2em; font-size: .9rem; line-height: 1.1; }
   .rejilla-cats .insignia { top: 4px; right: 4px; min-width: 22px; height: 22px; font-size: .75rem; }
 }
+@media (max-width: 899px) { .rejilla-cats .tarjeta.cat strong { overflow-wrap: anywhere; } }
+@media (max-width: 359px) {
+  .rejilla-cats { gap: 8px; }
+  .rejilla-cats .tarjeta.cat { padding: .45rem .15rem .55rem; }
+  .rejilla-cats .tarjeta.cat .ilustra { width: 50px; height: 50px; }
+  .rejilla-cats .tarjeta.cat strong { font-size: .78rem; }
+}
+
+/* Promociones */
+.banner-promo { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; font: inherit; color: var(--azul); text-decoration: none; text-align: left; cursor: pointer; background: var(--naranja); border: 3px solid var(--azul); border-radius: 18px; box-shadow: var(--sombra); padding: .55rem 1rem .55rem .7rem; transition: transform .12s, box-shadow .12s; }
+.banner-promo:hover { transform: translateY(2px); box-shadow: 0 2px 0 var(--azul); }
+.banner-icono { flex: 0 0 54px; width: 54px; height: 54px; background: var(--rosa-fuerte); border: 3px solid var(--azul); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.banner-icono svg { width: 38px; height: 38px; }
+.banner-texto { flex: 1; display: flex; flex-direction: column; line-height: 1.15; }
+.banner-texto strong { font-family: var(--font-titulo); font-weight: 800; font-size: 1.3rem; }
+.banner-texto span { font-size: .85rem; font-weight: 700; }
+.banner-flecha { font-family: var(--font-titulo); font-weight: 800; font-size: 1.6rem; }
+.banner-promo .insignia { top: -10px; right: 10px; }
+#banner-promo-home { margin-bottom: 1rem; }
+.chip.promo { background: var(--naranja); }
+.chip.promo.on { background: var(--rosa-fuerte); color: #fff; }
+.ahorro { position: absolute; top: 8px; left: 8px; z-index: 2; background: var(--rosa-fuerte); color: #fff; border: 2px solid var(--azul); border-radius: 999px; font-size: .7rem; font-weight: 800; padding: 1px 8px; }
+.prod .precio .antes { font-weight: 600; font-size: .8em; color: var(--texto-suave); }
+.ahorro-linea { margin: 0; background: var(--fondo-claro); border-radius: 12px; padding: 8px 12px; font-size: .9rem; }
+
+@media (max-width: 374px) { .ahorro .pal { display: none; } }
+
+.btn-sonido { background: transparent; border: 2px solid transparent; border-radius: 999px; padding: .25rem .5rem; font-size: 1.1rem; cursor: pointer; line-height: 1; }
+.btn-sonido:hover { border-color: var(--azul); }
+
+@media (max-width: 899px) { .solo-pc { display: none; } }
+.cantidad button:disabled { opacity: .4; cursor: default; box-shadow: none; transform: none; }
+
+/* En celular las categorías se eligen en su propia vista (botón "← Categorías"), así que la fila de chips sobra. */
+@media (max-width: 899px) { .rail-wrap { display: none; } }

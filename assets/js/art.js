@@ -101,6 +101,12 @@
     if (['milk', 'fruit', 'galaxy', 'sunset', 'slush', 'frappe', 'refresher', 'soda'].includes(kind)) return cup(c1, c2, kind, id);
     if (kind === 'sopa') return bowl(false, c1);
     if (kind === 'seco') return bowl(true, c1);
+    if (kind === 'duo') {
+      return `<g transform="translate(-20 10) scale(.82)">${cup(c1, c1, 'fruit', id + 'a')}</g><g transform="translate(34 16) scale(.82)">${cup(c2, c2, 'fruit', id + 'b')}</g>`;
+    }
+    if (kind === 'promo') {
+      return `<path d="M16 28Q16 20 24 20H62Q68 20 72 24L104 56Q110 62 104 68L72 100Q68 104 62 104H24Q16 104 16 96Z" fill="${c1}" ${o}/><circle cx="34" cy="38" r="5.5" fill="#FEEBEF" ${o}/><text x="60" y="80" text-anchor="middle" font-size="46" font-weight="800" fill="${c2}" font-family="Baloo 2, Nunito, sans-serif">%</text>`;
+    }
     if (kind === 'combo') {
       return `<g transform="translate(-14 4) scale(.8)">${cup(c1, c1, 'fruit', id)}</g><g transform="translate(56 40) scale(.55)">${draw.dumpling('#FFE9C8', c2)}</g>`;
     }

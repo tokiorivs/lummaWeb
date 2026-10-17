@@ -2,6 +2,7 @@
 (function () {
   const MENU = window.LUMMA_MENU, CFG = window.LUMMA_CONFIG, ART = window.LummaArt;
   const $app = document.getElementById('app');
+  const snd = (n) => { if (window.LummaSound) window.LummaSound.play(n); };
   const KEY = 'lumma_carta_v1';
 
   const money = (n) => 'S/ ' + n.toFixed(2);
@@ -38,10 +39,9 @@
   function detail() {
     const c = S.cur, i = c.item, d = [];
     if (i.variantes) d.push(i.variantes[c.vari].n);
-    if (i.sabores) d.push(i.sabores[c.sab]);
+    if (i.sabores) d.push(i.detSabor ? i.detSabor(i.sabores[c.sab]) : i.sabores[c.sab]);
     if (i.tipo === 'bebida') { d.push(c.size ? 'Grande' : 'Regular'); d.push('Topping: ' + CFG.topping_gratis[c.top].toLowerCase()); }
     if (i.tipo === 'ramen') { d.push(CFG.picantes[c.pic]); c.extras.forEach((n) => d.push('+ ' + n.toLowerCase())); }
-    if (i.tipo === 'combo') d.unshift('Fruit Tea de ' + i.sabores[c.sab].toLowerCase());
     return d;
   }
 
@@ -49,7 +49,7 @@
 
   function openItem(id) {
     const i = find(id);
-    if (i.tipo === 'simple' && !i.variantes && !i.sabores) { addLine({ key: i.id, id: i.id, nombre: nom(i), det: [], u: i.precio, q: 1 }); render(); return; }
+    if (i.tipo === 'simple' && !i.variantes && !i.sabores) { addLine({ key: i.id, id: i.id, nombre: nom(i), det: [], u: i.precio, q: 1 }); snd('pop'); render(); return; }
     S.cur = { item: i, q: 1, size: 0, top: 0, pic: 1, extras: [], vari: 0, sab: 0 };
     go('sheet');
   }
@@ -69,7 +69,7 @@
   function checkout() {
     const hasMain = S.cart.some((l) => { const i = find(l.id); return i && (i.tipo === 'bebida' || i.tipo === 'ramen'); });
     const hasSnack = S.cart.some((l) => { const i = find(l.id); return i && i.cat === 'dim-sum'; });
-    if (!S.upShown && hasMain && !hasSnack) { S.upShown = true; go('up'); } else go('cart');
+    if (!S.upShown && hasMain && !hasSnack) { S.upShown = true; go('up'); } else { snd('chime'); go('cart'); }
   }
 
   /* ---------- vistas ---------- */
@@ -79,10 +79,10 @@
   function card(i, n) {
     const q = qtyOf(i.id), simple = i.tipo === 'simple' && !i.variantes && !i.sabores;
     return `<button class="prod" data-a="item" data-v="${i.id}">
-      ${q ? `<span class="insignia">${q}</span>` : ''}
+      ${q ? `<span class="insignia">${q}</span>` : ''}${i.antes ? `<span class="ahorro"><span class="pal">Ahorras </span>${money(i.antes - i.precio)}</span>` : ''}
       <span class="foto" style="background:${ART.tint(i.c[0], 0.8)}">${ART.svg(i.arte, i.c[0], i.c[1], 'p' + n)}</span>
       <span class="info"><span class="nombre">${i.nombre}</span>
-      <span class="precio-fila"><span class="precio">${money(i.precio)}</span><span class="accion">${simple ? 'Agregar' : 'Elegir'}</span></span></span>
+      <span class="precio-fila"><span class="precio">${i.antes ? `<s class="antes">${money(i.antes)}</s> ` : ''}${money(i.precio)}</span><span class="accion">${simple ? 'Agregar' : 'Elegir'}</span></span></span>
     </button>`;
   }
 
@@ -93,7 +93,9 @@
 
   function viewCats() {
     const enPedido = (id) => S.cart.reduce((a, l) => { const i = find(l.id); return a + (i && i.cat === id ? l.q : 0); }, 0);
-    return `<h2 class="titulo-cats">Toca una categoría</h2><div class="rejilla-cats">${MENU.map((c, n) => {
+    const promo = MENU.find((c) => c.especial);
+    const banner = promo ? `<button class="banner-promo" data-a="cat" data-v="${promo.id}">${enPedido(promo.id) ? `<span class="insignia">${enPedido(promo.id)}</span>` : ''}<span class="banner-icono">${ART.svg('promo', '#FFFFFF', '#EC2C6C', 'bp')}</span><span class="banner-texto"><strong>${promo.nombre}</strong><span>${promo.nota}</span></span><span class="banner-flecha" aria-hidden="true">→</span></button>` : '';
+    return `${banner}<h2 class="titulo-cats">Toca una categoría</h2><div class="rejilla-cats">${MENU.filter((c) => !c.especial).map((c, n) => {
       const q = enPedido(c.id);
       return `<button class="tarjeta cat" data-a="cat" data-v="${c.id}">${q ? `<span class="insignia">${q}</span>` : ''}<div class="ilustra">${ART.svg(c.icono, c.c[0], c.c[1], 'k' + n)}</div><strong>${c.nombre}</strong><span class="nota-cat solo-lectores">${c.nota}</span></button>`;
     }).join('')}</div>${barraPedido()}`;
@@ -101,7 +103,7 @@
 
   function viewMenu() {
     const cat = MENU.find((c) => c.id === S.cat);
-    const rail = MENU.map((c) => `<button class="chip${c.id === S.cat ? ' on' : ''}" data-a="cat" data-v="${c.id}">${c.nombre}<span class="nota">${c.nota}</span></button>`).join('');
+    const rail = MENU.map((c) => `<button class="chip${c.especial ? ' promo' : ''}${c.id === S.cat ? ' on' : ''}" data-a="cat" data-v="${c.id}">${c.nombre}<span class="nota">${c.nota}</span></button>`).join('');
     let h = `<div class="fila barra-volver solo-movil"><button class="volver" data-a="cats">← Categorías</button><strong>${cat.nombre}</strong><span></span></div>
       <div class="layout"><div class="rail-wrap"><p class="pista-cat">Toca una categoría</p><div class="rail" role="tablist" aria-label="Categorías">${rail}</div></div>
       <div><div class="rejilla-prod">${cat.items.map((i, n) => card(i, n)).join('')}</div></div></div>`;
@@ -118,8 +120,9 @@
     let h = `<div class="fila barra-volver"><button class="volver" data-a="back">← Volver</button><strong>${nom(i)}</strong><span></span></div>
       <div class="detalle-foto" style="background:${ART.tint(i.c[0], 0.8)}">${ART.svg(i.arte, i.c[0], i.c[1], 'd')}</div>`;
     if (i.desc) h += `<p class="suave" style="margin:0">${i.desc}</p>`;
+    if (i.antes) h += `<p class="ahorro-linea">Antes <s>${money(i.antes)}</s> · Ahora ${money(i.precio)} · <b>Ahorras ${money(i.antes - i.precio)}</b></p>`;
     if (i.variantes) h += group('Elige una opción', opts(i.variantes, (n) => c.vari === n, 'vari', (v) => v.n + (v.p !== i.variantes[0].p ? ' · ' + money(v.p) : '')));
-    if (i.sabores) h += group(i.tipo === 'combo' ? 'Sabor del Fruit Tea' : 'Sabor', opts(i.sabores, (n) => c.sab === n, 'sab'));
+    if (i.sabores) h += group(i.saborEtq || 'Sabor', opts(i.sabores, (n) => c.sab === n, 'sab'));
     if (i.tipo === 'bebida') {
       h += group('Tamaño', opts(['Regular', 'Grande + ' + money(CFG.extra_grande)], (n) => c.size === n, 'size'));
       h += group('Topping gratis', opts(CFG.topping_gratis, (n) => c.top === n, 'top'));
@@ -128,8 +131,8 @@
       h += group('Nivel de picante', opts(CFG.picantes, (n) => c.pic === n, 'pic'));
       h += group('Toppings extra', opts(CFG.extras_ramen, (n) => c.extras.includes(CFG.extras_ramen[n].n), 'extra', (e) => e.n + ' + ' + money(e.p)));
     }
-    h += `<div class="cantidad"><span class="etq-cant">Cantidad</span><div class="ctl"><button data-a="menos" aria-label="Menos">−</button><span class="num" aria-live="polite">${c.q}</span><button data-a="mas" aria-label="Más">+</button></div></div>`;
-    h += `<div class="barra"><div><div class="suave">Total</div><div class="total">${money(unit() * c.q)}</div></div><button class="btn" data-a="addcur">Agregar al pedido</button></div>`;
+    h += `<div class="cantidad"><span class="etq-cant">Cantidad</span><div class="ctl"><button data-a="menos" aria-label="Menos"${c.q === 0 ? ' disabled' : ''}>−</button><span class="num" aria-live="polite">${c.q}</span><button data-a="mas" aria-label="Más">+</button></div></div>`;
+    h += `<div class="barra"><div><div class="suave">Total</div><div class="total">${money(unit() * c.q)}</div></div>${c.q === 0 ? '<button class="btn blanco" data-a="salir"><span class="solo-movil">Volver a categorías</span><span class="solo-pc">Volver al menú</span></button>' : '<button class="btn" data-a="addcur">Agregar al pedido</button>'}</div>`;
     return h;
   }
 
@@ -217,6 +220,9 @@
     const t = e.target.closest('[data-a]');
     if (!t) return;
     const a = t.dataset.a, v = t.dataset.v, c = S.cur;
+    if (['size', 'top', 'pic', 'vari', 'sab', 'extra', 'mas', 'menos', 'lmas', 'lmenos'].includes(a)) snd('tick');
+    else if (['addcur', 'sug'].includes(a)) snd('pop');
+    else if (a === 'nogracias') snd('chime');
     switch (a) {
       case 'cat': S.cat = v; if (S.view === 'cats') go('menu'); else render(); break;
       case 'cats': go('cats'); break;
@@ -230,16 +236,17 @@
       case 'sab': c.sab = +v; render(); break;
       case 'extra': { const n = CFG.extras_ramen[+v].n; const k = c.extras.indexOf(n); if (k >= 0) c.extras.splice(k, 1); else c.extras.push(n); render(); break; }
       case 'mas': c.q += 1; render(); break;
-      case 'menos': c.q = Math.max(1, c.q - 1); render(); break;
+      case 'menos': c.q = Math.max(0, c.q - 1); render(); break;
+      case 'salir': go(esGrande() ? 'menu' : 'cats'); break;
       case 'addcur': addCur(); break;
       case 'checkout': checkout(); break;
       case 'sug': addSuggested(v); break;
       case 'nogracias': go('cart'); break;
-      case 'rm': S.cart.splice(+v, 1); save(); if (!S.cart.length) S.view = 'menu'; render(); break;
+      case 'rm': S.cart.splice(+v, 1); save(); if (!S.cart.length) S.view = esGrande() ? 'menu' : 'cats'; render(); break;
       case 'lmas': S.cart[+v].q += 1; save(); render(); break;
-      case 'lmenos': { const l = S.cart[+v]; l.q -= 1; if (l.q <= 0) S.cart.splice(+v, 1); save(); if (!S.cart.length) S.view = 'menu'; render(); break; }
+      case 'lmenos': { const l = S.cart[+v]; l.q -= 1; if (l.q <= 0) S.cart.splice(+v, 1); save(); if (!S.cart.length) S.view = esGrande() ? 'menu' : 'cats'; render(); break; }
       case 'big': S.big = !S.big; render(); break;
-      case 'reset': S.cart = []; save(); S.upShown = false; S.big = false; go('menu'); break;
+      case 'reset': S.cart = []; save(); S.upShown = false; S.big = false; go(esGrande() ? 'menu' : 'cats'); break;
     }
   });
 

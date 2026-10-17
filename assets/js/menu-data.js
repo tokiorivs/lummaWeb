@@ -16,8 +16,21 @@
     ['Arándano', '#5B5FC7'], ['Manzana Verde', '#A5D86B'], ['Durazno Rosa', '#F9A8A0'], ['Piña', '#F9D84A'],
   ];
   const FRUIT_TEA_SABORES = frutas.map((f) => f[0]);
+  const DET_FRUIT_TEA = (s) => 'Fruit Tea de ' + s.toLowerCase();
+  const CLASSICS_SABORES = ['Milk Tea Dream', 'Taro Dream', 'Matcha Dream', 'Chococo Dream', 'Coconut Dream', 'Thai Tea Dream', 'Milk Coffee Dream', 'Moca Dream', 'Tiger Sugar', 'Blue Matcha', 'Choco Dream'];
 
-  window.LUMMA_MENU = [
+  const CATEGORIAS = [
+    /* PROMOCIONES DE EJEMPLO (demo): reemplazar por las reales del cliente.
+       antes = precio normal; precio = precio de la promoción; hasta = 'AAAA-MM-DD' (opcional) */
+    {
+      id: 'promociones', nombre: 'Promociones', nota: 'Ofertas del momento', icono: 'promo', c: ['#EC2C6C', '#F78F35'], especial: true,
+      items: [
+        { id: 'promo-duo-fruit-tea', nombre: 'Dúo Fruit Tea', precio: 22.9, antes: 25.8, tipo: 'combo', arte: 'duo', c: ['#F26B8A', '#F8B22A'], desc: '2 Fruit Teas del mismo sabor.', sabores: FRUIT_TEA_SABORES, saborEtq: 'Sabor de los dos Fruit Teas', detSabor: (s) => '2 Fruit Teas de ' + s.toLowerCase() },
+        { id: 'promo-ramen-mochi', nombre: 'Ramen + Mochi', precio: 14, antes: 16, tipo: 'simple', arte: 'sopa', c: ['#F2A654', '#F2A654'], desc: 'Una Sopa ramen con un mochi de postre.' },
+        { id: 'promo-2-dreams-taiyaki', nombre: '2 Dreams + Taiyaki', precio: 29.9, antes: 32.8, tipo: 'combo', arte: 'combo', c: ['#B68AD6', '#E9A95C'], desc: '2 bebidas The Classics del mismo sabor y un Taiyaki.', sabores: CLASSICS_SABORES, saborEtq: 'Sabor de las dos bebidas', detSabor: (s) => '2 × ' + s },
+        { id: 'promo-trio-mochis', nombre: 'Trío de Mochis', precio: 15, antes: 18, tipo: 'simple', arte: 'mochi', c: ['#F7B5CE', '#BFE3A0'], desc: '3 mochis para compartir.' },
+      ],
+    },
     {
       id: 'classics', nombre: 'The Classics', nota: 'A base de leche', icono: 'milk', c: ['#B68AD6', '#B68AD6'],
       items: bebidas('classics', 'milk', 13.9, [
@@ -105,11 +118,18 @@
     {
       id: 'combos', nombre: 'Combos', nota: 'Fruit Tea con acompañante', icono: 'combo', c: ['#E9579F', '#F8B22A'],
       items: [
-        { id: 'combos-fruit-tea-taiyaki', nombre: 'Combo Fruit Tea + Taiyaki', precio: 15, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#E9A95C'], desc: 'Tu Fruit Tea favorito con un Taiyaki de chispas de chocolate.', sabores: FRUIT_TEA_SABORES },
-        { id: 'combos-fruit-tea-ramen-sopa', nombre: 'Combo Fruit Tea + Ramen Sopa', precio: 20, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#F2A654'], desc: 'Tu Fruit Tea favorito con una Sopa ramen.', sabores: FRUIT_TEA_SABORES },
-        { id: 'combos-fruit-tea-ramen-spaghetti', nombre: 'Combo Fruit Tea + Ramen Spaghetti', precio: 22, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#C8552B'], desc: 'Tu Fruit Tea favorito con un Spaghetti ramen.', sabores: FRUIT_TEA_SABORES },
-        { id: 'combos-fruit-tea-pepero', nombre: 'Combo Fruit Tea + Pepero', precio: 16, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#7A4B33'], desc: 'Tu Fruit Tea favorito con un Pepero.', sabores: FRUIT_TEA_SABORES },
+        { id: 'combos-fruit-tea-taiyaki', nombre: 'Combo Fruit Tea + Taiyaki', precio: 15, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#E9A95C'], desc: 'Tu Fruit Tea favorito con un Taiyaki de chispas de chocolate.', sabores: FRUIT_TEA_SABORES, saborEtq: 'Sabor del Fruit Tea', detSabor: DET_FRUIT_TEA },
+        { id: 'combos-fruit-tea-ramen-sopa', nombre: 'Combo Fruit Tea + Ramen Sopa', precio: 20, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#F2A654'], desc: 'Tu Fruit Tea favorito con una Sopa ramen.', sabores: FRUIT_TEA_SABORES, saborEtq: 'Sabor del Fruit Tea', detSabor: DET_FRUIT_TEA },
+        { id: 'combos-fruit-tea-ramen-spaghetti', nombre: 'Combo Fruit Tea + Ramen Spaghetti', precio: 22, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#C8552B'], desc: 'Tu Fruit Tea favorito con un Spaghetti ramen.', sabores: FRUIT_TEA_SABORES, saborEtq: 'Sabor del Fruit Tea', detSabor: DET_FRUIT_TEA },
+        { id: 'combos-fruit-tea-pepero', nombre: 'Combo Fruit Tea + Pepero', precio: 16, tipo: 'combo', arte: 'combo', c: ['#F8B22A', '#7A4B33'], desc: 'Tu Fruit Tea favorito con un Pepero.', sabores: FRUIT_TEA_SABORES, saborEtq: 'Sabor del Fruit Tea', detSabor: DET_FRUIT_TEA },
       ],
     },
   ];
+
+  /* Solo se muestran las promociones vigentes; si no queda ninguna, la sección se oculta */
+  const hoy = new Date();
+  const vigente = (i) => !i.hasta || new Date(i.hasta + 'T23:59:59') >= hoy;
+  window.LUMMA_MENU = CATEGORIAS
+    .map((c) => (c.especial ? { ...c, items: c.items.filter(vigente) } : c))
+    .filter((c) => c.items.length);
 })();
