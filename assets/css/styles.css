@@ -261,3 +261,9 @@ button.tarjeta.cat { font: inherit; color: inherit; cursor: pointer; width: 100%
 
 /* En celular las categorías se eligen en su propia vista (botón "← Categorías"), así que la fila de chips sobra. */
 @media (max-width: 899px) { .rail-wrap { display: none; } }
+
+.caja-qr { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--blanco); border: 3px solid var(--azul); border-radius: 18px; padding: 14px; box-shadow: 0 3px 0 var(--azul); }
+.caja-qr .qr { width: min(100%, 320px); height: auto; display: block; }
+.caja-qr p { margin: 0; text-align: center; }
+.recibir { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+.recibir input { flex: 1 1 260px; max-width: 420px; padding: .7rem 1rem; border: 3px solid var(--azul); border-radius: 999px; font: inherit; }

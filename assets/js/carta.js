@@ -74,7 +74,7 @@
 
   /* ---------- vistas ---------- */
   const pasos = ['Elegir', 'Personalizar', 'Sugerencia', 'En caja'];
-  const stepIndex = { cats: 0, menu: 0, sheet: 1, up: 2, cart: 3 };
+  const stepIndex = { cats: 0, menu: 0, sheet: 1, up: 2, cart: 3, caja: 3 };
 
   function card(i, n) {
     const q = qtyOf(i.id), simple = i.tipo === 'simple' && !i.variantes && !i.sabores;
@@ -145,18 +145,44 @@
       <div class="barra" style="background:none;padding:0"><button class="btn blanco bloque" data-a="nogracias">No, gracias</button></div>`;
   }
 
+  function lineasPedido(editable) {
+    return S.cart.map((l, n) => `<div class="linea"><div><div class="nm">${l.q} × ${l.nombre}</div>${l.det.length ? `<div class="suave">${l.det.join(' · ')}</div>` : ''}${editable ? `<div class="ctrl"><button class="paso" data-a="lmenos" data-v="${n}" aria-label="Quitar uno de ${l.nombre}">−</button><button class="paso mas" data-a="lmas" data-v="${n}" aria-label="Sumar uno de ${l.nombre}">+</button><button class="quitar" data-a="rm" data-v="${n}">Quitar</button></div>` : ''}</div><div class="precio-linea">${money(l.u * l.q)}</div></div>`).join('');
+  }
+  const vacio = () => `<div class="vacio"><h2>Tu pedido está vacío</h2><p>Elige algo de la carta para ver tu total.</p><button class="btn" data-a="seguir">Ir a la carta</button></div>`;
+
+  /* Revisar y editar el pedido. Sin QR: el QR cambiaría mientras editas. */
   function viewCart() {
-    if (!S.cart.length) return `<div class="vacio"><h2>Tu pedido está vacío</h2><p>Elige algo de la carta para ver tu total.</p><button class="btn" data-a="seguir">Ir a la carta</button></div>`;
-    let h = `<div class="${S.big ? 'grande-modo' : ''}" style="display:flex;flex-direction:column;gap:12px">
-      <div class="fila barra-volver"><button class="volver" data-a="back">← Volver</button><strong>Muestra esto en caja</strong><span></span></div>
-      <div class="total-fila total-arriba"><span>Total a pagar</span><span class="grande">${money(total())}</span></div>`;
-    S.cart.forEach((l, n) => {
-      h += `<div class="linea"><div><div class="nm">${l.q} × ${l.nombre}</div>${l.det.length ? `<div class="suave">${l.det.join(' · ')}</div>` : ''}<div class="ctrl"><button class="paso" data-a="lmenos" data-v="${n}" aria-label="Quitar uno de ${l.nombre}">−</button><button class="paso mas" data-a="lmas" data-v="${n}" aria-label="Sumar uno de ${l.nombre}">+</button><button class="quitar" data-a="rm" data-v="${n}">Quitar</button></div></div><div class="precio-linea">${money(l.u * l.q)}</div></div>`;
-    });
-    h += `<div class="nota-caja">Este resumen no se envía a nadie. Díctalo o muéstralo en caja, donde se confirma y se cobra tu pedido.</div>
-      <div class="acciones-col"><button class="btn rosa bloque" data-a="big">${S.big ? 'Letra normal' : 'Letra grande para mostrar'}</button>
+    if (!S.cart.length) return vacio();
+    return `<div style="display:flex;flex-direction:column;gap:12px">
+      <div class="fila barra-volver"><button class="volver" data-a="back">← Volver</button><strong>Revisa tu pedido</strong><span></span></div>
+      <div class="total-fila total-arriba"><span>Total a pagar</span><span class="grande">${money(total())}</span></div>
+      ${lineasPedido(true)}
+      <div class="acciones-col"><button class="btn rosa bloque" data-a="caja">Listo, mostrar en caja</button>
       <div class="acciones-fila"><button class="btn blanco" data-a="seguir">Seguir agregando</button><button class="btn blanco" data-a="reset">Vaciar pedido</button></div></div></div>`;
-    return h;
+  }
+
+  /* QR que abre pedido.html con el pedido dentro del enlace. */
+  function qrSvg(url) {
+    const qr = window.qrcodegen.QrCode.encodeText(url, window.qrcodegen.QrCode.Ecc.LOW);
+    const m = 4, n = qr.size + m * 2;
+    let d = '';
+    for (let y = 0; y < qr.size; y++) for (let x = 0; x < qr.size; x++) if (qr.getModule(x, y)) d += `M${x + m},${y + m}h1v1h-1z`;
+    return `<svg class="qr" viewBox="0 0 ${n} ${n}" role="img" aria-label="Código QR de tu pedido" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+  }
+  function urlPedido() {
+    const u = new URL('pedido.html', location.href);
+    u.hash = 'p=' + window.LummaPedido.codificar(S.cart, total());
+    return u.href;
+  }
+
+  function viewCaja() {
+    if (!S.cart.length) return vacio();
+    return `<div style="display:flex;flex-direction:column;gap:12px">
+      <div class="fila barra-volver"><button class="volver" data-a="editar">← Editar pedido</button><strong>Muestra esto en caja</strong><span></span></div>
+      <div class="caja-qr">${qrSvg(urlPedido())}<p class="suave">El cajero escanea este código para ver tu pedido.</p></div>
+      <div class="total-fila total-arriba"><span>Total a pagar</span><span class="grande">${money(total())}</span></div>
+      ${lineasPedido(false)}
+      <div class="nota-caja">Se confirma y se cobra en caja.</div></div>`;
   }
 
   /* ---------- barra de categorías: posición, degradado y pista de deslizar ---------- */
@@ -207,7 +233,7 @@
 
   function render() {
     if (S.view === 'cats' && esGrande()) S.view = 'menu';
-    const views = { cats: viewCats, menu: viewMenu, sheet: viewSheet, up: viewUp, cart: viewCart };
+    const views = { cats: viewCats, menu: viewMenu, sheet: viewSheet, up: viewUp, cart: viewCart, caja: viewCaja };
     const ix = stepIndex[S.view];
     const previa = $app.querySelector('.rail');
     const izq = previa ? previa.scrollLeft : 0;
@@ -237,6 +263,8 @@
       case 'extra': { const n = CFG.extras_ramen[+v].n; const k = c.extras.indexOf(n); if (k >= 0) c.extras.splice(k, 1); else c.extras.push(n); render(); break; }
       case 'mas': c.q += 1; render(); break;
       case 'menos': c.q = Math.max(0, c.q - 1); render(); break;
+      case 'caja': go('caja'); break;
+      case 'editar': go('cart'); break;
       case 'salir': go(esGrande() ? 'menu' : 'cats'); break;
       case 'addcur': addCur(); break;
       case 'checkout': checkout(); break;
