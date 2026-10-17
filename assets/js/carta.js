@@ -86,7 +86,7 @@
   function viewMenu() {
     const cat = MENU.find((c) => c.id === S.cat);
     const rail = MENU.map((c) => `<button class="chip${c.id === S.cat ? ' on' : ''}" data-a="cat" data-v="${c.id}">${c.nombre}<span class="nota">${c.nota}</span></button>`).join('');
-    let h = `<div class="layout"><div class="rail" role="tablist" aria-label="Categorías">${rail}</div>
+    let h = `<div class="layout"><div class="rail-wrap"><p class="pista-cat">Toca una categoría</p><div class="rail" role="tablist" aria-label="Categorías">${rail}</div></div>
       <div><div class="rejilla-prod">${cat.items.map((i, n) => card(i, n)).join('')}</div></div></div>`;
     if (S.cart.length) h += `<div class="barra"><div><div class="suave">${count()} producto${count() > 1 ? 's' : ''} en tu pedido</div><div class="total">${money(total())}</div></div><button class="btn" data-a="checkout">Ver pedido</button></div>`;
     return h;
@@ -132,7 +132,7 @@
       <div class="fila"><button class="volver" data-a="back">← Volver</button><strong>Muestra esto en caja</strong><span></span></div>
       <div class="total-fila total-arriba"><span>Total a pagar</span><span class="grande">${money(total())}</span></div>`;
     S.cart.forEach((l, n) => {
-      h += `<div class="linea"><div><div class="nm">${l.q} × ${l.nombre}</div>${l.det.length ? `<div class="suave">${l.det.join(' · ')}</div>` : ''}<button class="quitar" data-a="rm" data-v="${n}">Quitar</button></div><div class="precio-linea">${money(l.u * l.q)}</div></div>`;
+      h += `<div class="linea"><div><div class="nm">${l.q} × ${l.nombre}</div>${l.det.length ? `<div class="suave">${l.det.join(' · ')}</div>` : ''}<div class="ctrl"><button class="paso" data-a="lmenos" data-v="${n}" aria-label="Quitar uno de ${l.nombre}">−</button><button class="paso mas" data-a="lmas" data-v="${n}" aria-label="Sumar uno de ${l.nombre}">+</button><button class="quitar" data-a="rm" data-v="${n}">Quitar</button></div></div><div class="precio-linea">${money(l.u * l.q)}</div></div>`;
     });
     h += `<div class="nota-caja">Este resumen no se envía a nadie. Díctalo o muéstralo en caja, donde se confirma y se cobra tu pedido.</div>
       <div class="acciones-col"><button class="btn rosa bloque" data-a="big">${S.big ? 'Letra normal' : 'Letra grande para mostrar'}</button>
@@ -140,10 +140,59 @@
     return h;
   }
 
+  /* ---------- barra de categorías: posición, degradado y pista de deslizar ---------- */
+  let pistaMostrada = false;
+  try { pistaMostrada = sessionStorage.getItem('lumma_pista_cat') === '1'; } catch (e) { /* sin almacenamiento */ }
+
+  function nudge(rail) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (getComputedStyle(rail).flexDirection === 'column') return;
+    const max = rail.scrollWidth - rail.clientWidth;
+    if (max < 12 || rail.scrollLeft > 0) return;
+    const dist = Math.min(90, max), D = 500;
+    let parar = false;
+    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach((ev) => rail.addEventListener(ev, () => { parar = true; }, { once: true, passive: true }));
+    const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+    setTimeout(() => {
+      const t0 = performance.now();
+      const paso = (ahora) => {
+        if (parar || !rail.isConnected) return;
+        const k = Math.min((ahora - t0) / (2 * D), 1);
+        rail.scrollLeft = dist * (k < 0.5 ? ease(k * 2) : 1 - ease((k - 0.5) * 2));
+        if (k < 1) requestAnimationFrame(paso); else rail.scrollLeft = 0;
+      };
+      requestAnimationFrame(paso);
+    }, 800);
+  }
+
+  function prepararBarra(izq) {
+    const rail = $app.querySelector('.rail');
+    if (!rail) return;
+    const wrap = rail.parentElement;
+    rail.scrollLeft = izq;
+    const act = rail.querySelector('.chip.on');
+    if (act && getComputedStyle(rail).flexDirection !== 'column') {
+      const l = act.offsetLeft, r = l + act.offsetWidth;
+      if (l < rail.scrollLeft + 8) rail.scrollLeft = Math.max(l - 12, 0);
+      else if (r > rail.scrollLeft + rail.clientWidth - 8) rail.scrollLeft = r - rail.clientWidth + 12;
+    }
+    const actualizar = () => wrap.classList.toggle('fin', rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4);
+    actualizar();
+    rail.addEventListener('scroll', actualizar, { passive: true });
+    if (!pistaMostrada) {
+      pistaMostrada = true;
+      try { sessionStorage.setItem('lumma_pista_cat', '1'); } catch (e) { /* sin almacenamiento */ }
+      nudge(rail);
+    }
+  }
+
   function render() {
     const views = { menu: viewMenu, sheet: viewSheet, up: viewUp, cart: viewCart };
     const ix = stepIndex[S.view];
+    const previa = $app.querySelector('.rail');
+    const izq = previa ? previa.scrollLeft : 0;
     $app.innerHTML = `<div class="pasos" aria-label="Pasos">${pasos.map((p, n) => `<span class="${n === ix ? 'on' : ''}"${n === ix ? ' aria-current="step"' : ''}>${p}</span>`).join('')}</div>${views[S.view]()}`;
+    prepararBarra(izq);
   }
 
   /* ---------- eventos ---------- */
@@ -168,6 +217,8 @@
       case 'sug': addSuggested(v); break;
       case 'nogracias': go('cart'); break;
       case 'rm': S.cart.splice(+v, 1); save(); if (!S.cart.length) S.view = 'menu'; render(); break;
+      case 'lmas': S.cart[+v].q += 1; save(); render(); break;
+      case 'lmenos': { const l = S.cart[+v]; l.q -= 1; if (l.q <= 0) S.cart.splice(+v, 1); save(); if (!S.cart.length) S.view = 'menu'; render(); break; }
       case 'big': S.big = !S.big; render(); break;
       case 'reset': S.cart = []; save(); S.upShown = false; S.big = false; go('menu'); break;
     }

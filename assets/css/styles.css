@@ -107,7 +107,11 @@ a { color: inherit; }
 .suave { color: var(--texto-suave); font-size: .9rem; }
 
 .layout { display: flex; flex-direction: column; gap: 12px; }
-.rail { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.rail { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; position: relative; }
+.rail-wrap { position: relative; }
+.pista-cat { margin: 0 0 6px; font-size: .85rem; font-weight: 800; color: var(--texto-suave); }
+.rail-wrap::after { content: ''; position: absolute; right: 0; top: 26px; bottom: 8px; width: 44px; pointer-events: none; background: linear-gradient(to right, rgba(255, 255, 255, 0), #fff 85%); transition: opacity .2s; }
+.rail-wrap.fin::after { opacity: 0; }
 .chip { font-family: var(--font-texto); font-weight: 800; font-size: .88rem; padding: 7px 14px; border-radius: 999px; border: 2px solid var(--azul); background: var(--blanco); color: var(--azul); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .chip.on { background: var(--rosa); color: var(--blanco); }
 .chip .nota { display: none; }
@@ -160,7 +164,9 @@ a { color: inherit; }
 /* ===== Pantallas grandes: carta con columna de categorías ===== */
 @media (min-width: 900px) {
   .layout { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 18px; align-items: start; }
-  .rail { flex-direction: column; overflow: visible; position: sticky; top: 76px; }
+  .rail-wrap { position: sticky; top: 76px; }
+  .rail-wrap::after { display: none; }
+  .rail { flex-direction: column; overflow: visible; position: static; }
   .chip { border-radius: 16px; text-align: left; padding: 10px 14px; white-space: normal; }
   .chip .nota { display: block; font-size: .72rem; font-weight: 600; opacity: .8; }
   .rejilla-prod { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -187,3 +193,10 @@ a { color: inherit; }
 .prod .precio-fila { margin-top: auto; padding-top: 0; }
 .prod .precio { text-align: center; }
 .prod .nombre { display: flex; align-items: center; justify-content: center; text-align: center; }
+
+.ctrl { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.paso { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--azul); background: var(--blanco); color: var(--azul); font-family: var(--font-texto); font-weight: 800; font-size: 1.3rem; line-height: 1; cursor: pointer; padding: 0; }
+.paso.mas { background: var(--naranja); }
+.paso:hover { transform: translateY(1px); }
+.grande-modo .paso { width: 46px; height: 46px; font-size: 1.6rem; }
+.grande-modo .quitar { font-size: 1rem; }
