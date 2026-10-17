@@ -99,7 +99,7 @@
 
   function viewSheet() {
     const c = S.cur, i = c.item;
-    let h = `<div class="fila"><button class="volver" data-a="back">← Volver</button><strong>${nom(i)}</strong><span></span></div>
+    let h = `<div class="fila barra-volver"><button class="volver" data-a="back">← Volver</button><strong>${nom(i)}</strong><span></span></div>
       <div class="detalle-foto" style="background:${ART.tint(i.c[0], 0.8)}">${ART.svg(i.arte, i.c[0], i.c[1], 'd')}</div>`;
     if (i.desc) h += `<p class="suave" style="margin:0">${i.desc}</p>`;
     if (i.variantes) h += group('Elige una opción', opts(i.variantes, (n) => c.vari === n, 'vari', (v) => v.n + (v.p !== i.variantes[0].p ? ' · ' + money(v.p) : '')));
@@ -112,7 +112,7 @@
       h += group('Nivel de picante', opts(CFG.picantes, (n) => c.pic === n, 'pic'));
       h += group('Toppings extra', opts(CFG.extras_ramen, (n) => c.extras.includes(CFG.extras_ramen[n].n), 'extra', (e) => e.n + ' + ' + money(e.p)));
     }
-    h += `<div class="cantidad"><span class="suave">Cantidad</span><button data-a="menos" aria-label="Menos">−</button><span>${c.q}</span><button data-a="mas" aria-label="Más">+</button></div>`;
+    h += `<div class="cantidad"><span class="etq-cant">Cantidad</span><div class="ctl"><button data-a="menos" aria-label="Menos">−</button><span class="num" aria-live="polite">${c.q}</span><button data-a="mas" aria-label="Más">+</button></div></div>`;
     h += `<div class="barra"><div><div class="suave">Total</div><div class="total">${money(unit() * c.q)}</div></div><button class="btn" data-a="addcur">Agregar al pedido</button></div>`;
     return h;
   }
@@ -129,7 +129,7 @@
   function viewCart() {
     if (!S.cart.length) return `<div class="vacio"><h2>Tu pedido está vacío</h2><p>Elige algo de la carta para ver tu total.</p><button class="btn" data-a="back">Ir a la carta</button></div>`;
     let h = `<div class="${S.big ? 'grande-modo' : ''}" style="display:flex;flex-direction:column;gap:12px">
-      <div class="fila"><button class="volver" data-a="back">← Volver</button><strong>Muestra esto en caja</strong><span></span></div>
+      <div class="fila barra-volver"><button class="volver" data-a="back">← Volver</button><strong>Muestra esto en caja</strong><span></span></div>
       <div class="total-fila total-arriba"><span>Total a pagar</span><span class="grande">${money(total())}</span></div>`;
     S.cart.forEach((l, n) => {
       h += `<div class="linea"><div><div class="nm">${l.q} × ${l.nombre}</div>${l.det.length ? `<div class="suave">${l.det.join(' · ')}</div>` : ''}<div class="ctrl"><button class="paso" data-a="lmenos" data-v="${n}" aria-label="Quitar uno de ${l.nombre}">−</button><button class="paso mas" data-a="lmas" data-v="${n}" aria-label="Sumar uno de ${l.nombre}">+</button><button class="quitar" data-a="rm" data-v="${n}">Quitar</button></div></div><div class="precio-linea">${money(l.u * l.q)}</div></div>`;

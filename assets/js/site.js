@@ -9,6 +9,12 @@
     header.innerHTML = `<div class="contenedor"><a class="logo" href="index.html"><img src="assets/images/lumma-logo.webp" alt="${CFG.nombre}"></a>
       <nav class="nav" aria-label="Principal">${nav.map(([href, t, id]) => `<a href="${href}"${id === page ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav></div>`;
   }
+  /* altura del encabezado fijo: la usan los elementos que se pegan justo debajo */
+  const ajustarEncabezado = () => { if (header) document.documentElement.style.setProperty('--enc', header.offsetHeight + 'px'); };
+  ajustarEncabezado();
+  window.addEventListener('resize', ajustarEncabezado);
+  window.addEventListener('load', ajustarEncabezado);
+
   const footer = document.getElementById('pie');
   if (footer) footer.innerHTML = `<div class="contenedor">© ${new Date().getFullYear()} ${CFG.nombre}</div>`;
 

@@ -139,8 +139,14 @@ a { color: inherit; }
 .opciones { display: flex; flex-wrap: wrap; gap: 8px; }
 .opcion { font-family: var(--font-texto); font-weight: 700; font-size: .9rem; padding: 8px 14px; border-radius: 14px; border: 2px solid var(--azul); background: var(--blanco); color: var(--azul); cursor: pointer; }
 .opcion[aria-pressed="true"] { background: var(--naranja); }
-.cantidad { display: flex; align-items: center; gap: 14px; font-weight: 800; }
-.cantidad button { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--azul); background: var(--blanco); font-size: 1.2rem; font-weight: 800; cursor: pointer; color: var(--azul); }
+.cantidad { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: var(--fondo-claro); border: 3px solid var(--azul); border-radius: 18px; padding: 10px 16px; box-shadow: 0 3px 0 var(--azul); }
+.cantidad { --tam-cantidad: 1rem; }
+.cantidad .etq-cant { font-family: var(--font-titulo); font-weight: 800; font-size: var(--tam-cantidad); line-height: 1; color: var(--azul); }
+.cantidad .ctl { display: flex; align-items: center; gap: 16px; }
+.cantidad .num { min-width: 1.6em; text-align: center; font-family: var(--font-titulo); font-weight: 800; font-size: var(--tam-cantidad); line-height: 1; color: var(--azul); }
+.cantidad button { width: 46px; height: 46px; border-radius: 50%; border: 3px solid var(--azul); background: var(--blanco); font-family: var(--font-texto); font-size: 1.6rem; font-weight: 800; line-height: 1; cursor: pointer; color: var(--azul); padding: 0; box-shadow: 0 3px 0 var(--azul); transition: transform .1s, box-shadow .1s; }
+.cantidad button[data-a="mas"] { background: var(--naranja); }
+.cantidad button:active { transform: translateY(3px); box-shadow: 0 0 0 var(--azul); }
 
 .linea { border: 2px solid var(--azul); border-radius: 14px; padding: 10px 12px; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
 .linea .nm { font-weight: 800; }
@@ -200,3 +206,5 @@ a { color: inherit; }
 .paso:hover { transform: translateY(1px); }
 .grande-modo .paso { width: 46px; height: 46px; font-size: 1.6rem; }
 .grande-modo .quitar { font-size: 1rem; }
+
+.barra-volver { position: sticky; top: var(--enc, 64px); z-index: 15; background: var(--blanco); padding: 8px 0; border-bottom: 2px solid var(--fondo-borde); }
